@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { StyleSheet, View, Text, Button, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
@@ -7,6 +7,7 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const passwordInputRef = useRef(null);
 
   const navigation = useNavigation();
 
@@ -51,7 +52,7 @@ const Login = () => {
     <View style={styles.container}>
 
       <Text style={styles.login}>Login</Text>
-  {errorMessage ? <Text style={{ color: 'red' }}>{errorMessage}</Text> : null}
+      {errorMessage ? <Text style={{ color: 'red' }}>{errorMessage}</Text> : null}
 
       <View style={styles.card}>
         <TextInput
@@ -62,6 +63,7 @@ const Login = () => {
         />
 
         <TextInput
+          ref={passwordInputRef}
           style={styles.input}
           placeholder="Password"
           value={password}

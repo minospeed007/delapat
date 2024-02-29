@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, Button, StyleSheet, Modal } from 'react-native';
+import { View, TextInput, Text, Button, StyleSheet, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import axios from 'axios';
 
 const AddCustomer = () => {
@@ -51,7 +51,10 @@ const AddCustomer = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <Text style={styles.text}>Add New Customer</Text>
       {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
       <TextInput
@@ -99,7 +102,7 @@ const AddCustomer = () => {
           </View>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -151,7 +154,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontSize: 18,
     color:'green',
-    
     textAlign: 'center',
   },
 });

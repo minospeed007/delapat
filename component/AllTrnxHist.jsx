@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, FlatList, StyleSheet, TextInput } from 'react-native';
 import moment from 'moment';
 import axios from 'axios';
@@ -6,6 +6,7 @@ import axios from 'axios';
 const AllTrnxHist = () => {
   const [transactions, setTransactions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const textInputRef = useRef(null); // Create a ref for the TextInput component
 
   const fetchData = async () => {
     try {
@@ -33,14 +34,20 @@ const AllTrnxHist = () => {
     return moment(date).format('MMMM Do YYYY, h:mm:ss a');
   };
 
+  const handleFocusTextInput = () => {
+    textInputRef.current.focus(); // Focus on the TextInput component
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Transaction History</Text>
       <TextInput
+        ref={textInputRef} // Assign the ref to the TextInput component
         style={styles.input}
         onChangeText={(text) => setSearchQuery(text)}
         value={searchQuery}
         placeholder="Search..."
+        onFocus={handleFocusTextInput} // Call handleFocusTextInput when TextInput is focused
       />
       <FlatList
         data={filteredTransactions}
