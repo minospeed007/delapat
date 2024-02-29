@@ -14,7 +14,7 @@ const Search = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('http://192.168.43.159:5000/api/users/');
+      const response = await axios.get('https://vast-rose-jackrabbit-kit.cyclic.app/api/users/');
       setFilteredData(response.data);
     } catch (error) {
       console.error('Error fetching data:', error);

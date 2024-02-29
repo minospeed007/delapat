@@ -9,7 +9,7 @@ const AllTrnxHist = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('http://192.168.43.159:5000/api/transactions/');
+      const response = await axios.get('https://vast-rose-jackrabbit-kit.cyclic.app/api/transactions/');
       const sortedData = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
       setTransactions(sortedData);
     } catch (error) {

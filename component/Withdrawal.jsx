@@ -65,7 +65,7 @@ const Withdrawal = () => {
         "LastName": lastName,
         "phone": phoneNumber
       };
-      const response = await axios.post('http://192.168.43.159:5000/api/auth/withdrawal', formData);
+      const response = await axios.post('https://vast-rose-jackrabbit-kit.cyclic.app/api/auth/withdrawal', formData);
       console.log(response?.data)
       setBalance(response?.data)
       console.log(balance)

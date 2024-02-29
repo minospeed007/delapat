@@ -37,7 +37,7 @@ const RegisterAdmin = () => {
         "username": username,
         "password": password,
       };
-      const response = await axios.post('http://192.168.43.159:5000/api/auth/admin', formData);
+      const response = await axios.post('https://vast-rose-jackrabbit-kit.cyclic.app/api/auth/admin', formData);
       console.log(response?.data)
       navigation.navigate('Login');
     } catch (error) {
