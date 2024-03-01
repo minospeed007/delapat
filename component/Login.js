@@ -26,7 +26,7 @@ const Login = () => {
         "password":password,
         
       };
-      const response = await axios.post('https://vast-rose-jackrabbit-kit.cyclic.app/api/auth/admin_login', formData);
+      const response = await axios.post('https://delaserver.onrender.com/api/auth/admin_login', formData);
       console.log(response?.data)
       console.log("user:"+ response?.data?.details?.username)
       navigation.navigate('Home');

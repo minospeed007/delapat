@@ -13,7 +13,7 @@ const CustomerBalance = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('https://vast-rose-jackrabbit-kit.cyclic.app/api/users/');
+      const response = await axios.get('https://delaserver.onrender.com/api/users/');
       setAllUsers(response.data);
     } catch (error) {
       console.error('Error fetching data:', error);

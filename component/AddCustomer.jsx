@@ -31,7 +31,7 @@ const AddCustomer = () => {
         LastName: lastName,
         phone: phone,
       };
-      const response = await axios.post('https://vast-rose-jackrabbit-kit.cyclic.app/api/users/register_customer', formData);
+      const response = await axios.post('https://delaserver.onrender.com/api/users/register_customer', formData);
       console.log(response?.data);
       setId('');
       setFirstName('');

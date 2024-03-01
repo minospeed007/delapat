@@ -10,7 +10,7 @@ const AllTrnxHist = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('https://vast-rose-jackrabbit-kit.cyclic.app/api/transactions/');
+      const response = await axios.get('https://delaserver.onrender.com/api/transactions/');
       const sortedData = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
       setTransactions(sortedData);
     } catch (error) {

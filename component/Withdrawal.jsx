@@ -65,7 +65,8 @@ const Withdrawal = () => {
         "LastName": lastName,
         "phone": phoneNumber
       };
-      const response = await axios.post('https://vast-rose-jackrabbit-kit.cyclic.app/api/auth/withdrawal', formData);
+      const response = await axios.post('https://delaserver.onrender.com/api/auth/withdrawal', 
+      formData, { withCredentials: true });
       console.log(response?.data)
       setBalance(response?.data)
       console.log(balance)

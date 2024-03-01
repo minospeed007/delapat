@@ -22,7 +22,7 @@ const Deposit = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('https://vast-rose-jackrabbit-kit.cyclic.app/api/users/');
+      const response = await axios.get('https://delaserver.onrender.com/api/users/');
       setFilteredData(response.data);
       setOriginalData(response.data);
     } catch (error) {
