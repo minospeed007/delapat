@@ -37,7 +37,7 @@ const RegisterAdmin = () => {
         "username": username,
         "password": password,
       };
-      const response = await axios.post('https://vast-rose-jackrabbit-kit.cyclic.app/api/auth/admin', formData);
+      const response = await axios.post('https://delaserver.onrender.com/api/auth/admin', formData);
       console.log(response?.data)
       navigation.navigate('Login');
     } catch (error) {

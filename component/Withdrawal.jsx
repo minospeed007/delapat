@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, TextInput, View, Text, Modal, Pressable, TouchableOpacity, Button } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
@@ -21,9 +22,19 @@ const Withdrawal = () => {
     fetchData();
   }, []);
 
+  // Function to retrieve the authentication token from AsyncStorage
+  const getAuthToken = async () => {
+    try {
+      return await AsyncStorage.getItem('authToken');
+    } catch (error) {
+      console.error('Error retrieving authentication token:', error);
+      throw error;
+    }
+  };
+
   const fetchData = async () => {
     try {
-      const response = await axios.get('http://192.168.43.159:5000/api/users/');
+      const response = await axios.get('https://delaserver.onrender.com/api/users/');
       setFilteredData(response.data);
       setOriginalData(response.data);
     } catch (error) {
@@ -58,6 +69,9 @@ const Withdrawal = () => {
 
   const handleSubmit = async () => {
     try {
+      // Get the authentication token
+      const authToken = await getAuthToken();
+
       const formData = {
         "userId": id,
         "amount": amount,
@@ -65,11 +79,13 @@ const Withdrawal = () => {
         "LastName": lastName,
         "phone": phoneNumber
       };
-      const response = await axios.post('https://delaserver.onrender.com/api/auth/withdrawal', 
-      formData, { withCredentials: true });
+      const response = await axios.post('https://delaserver.onrender.com/api/auth/withdrawal', formData, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
       console.log(response?.data)
       setBalance(response?.data)
-      console.log(balance)
       setModalVisible(true)
       setId('');
       setAmount('')

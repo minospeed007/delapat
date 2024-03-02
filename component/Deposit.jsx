@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TextInput, View, Text,
-   TouchableOpacity, Button,Modal,Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, TextInput, View, Text, TouchableOpacity, Button, Modal, Pressable } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import axios from 'axios';
 
 const Deposit = () => {
@@ -9,8 +8,8 @@ const Deposit = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [balance,setBalance]=useState('')
-  const [modalVisible,setModalVisible]=useState(false)
+  const [balance, setBalance] = useState('')
+  const [modalVisible, setModalVisible] = useState(false)
   const [amount, setAmount] = useState('');
   const [filteredData, setFilteredData] = useState([]);
   const [originalData, setOriginalData] = useState([]);
@@ -19,6 +18,16 @@ const Deposit = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Function to retrieve the authentication token from AsyncStorage
+  const getToken = async () => {
+    try {
+      return await AsyncStorage.getItem('authToken');
+    } catch (error) {
+      console.error('Error retrieving authentication token:', error);
+      throw error;
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -37,7 +46,7 @@ const Deposit = () => {
     setPhoneNumber(item.phone);
     setIdSelected(true);
   };
-  
+
 
   const handleInputChange = (value) => {
     setId(value);
@@ -49,23 +58,32 @@ const Deposit = () => {
     setIdSelected(false);
     const newData = value
       ? originalData.filter(item =>
-          item.Id.toString().includes(value.toLowerCase())
-        )
+        item.Id.toString().includes(value.toLowerCase())
+      )
       : originalData;
     setFilteredData(newData);
   };
 
   const handleSubmit = async () => {
     try {
-      const formData = {
-    "userId":id,
-	"amount":amount,
-  "FirstName": firstName,
-   "LastName": lastName,
-    "phone": phoneNumber
-	
+      // Get the authentication token
+      const token = await getToken();
+
+      // Configure Axios request headers with the token
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       };
-      const response = await axios.post('http://192.168.43.159:5000/api/auth/deposit', formData);
+
+      const formData = {
+        "userId": id,
+        "amount": amount,
+        "FirstName": firstName,
+        "LastName": lastName,
+        "phone": phoneNumber
+      };
+      const response = await axios.post('https://delaserver.onrender.com/api/auth/deposit', formData, config);
       console.log(response?.data)
       setBalance(response?.data)
       setModalVisible(true)
@@ -74,19 +92,20 @@ const Deposit = () => {
       setFirstName('');
       setLastName('');
       setPhoneNumber('');
-    
+
     } catch (error) {
       console.error('Submitting Failed :', error);
     }
   };
+
   return (
     <View style={styles.container}>
-          <Text style={styles.texts}> Deposit</Text>
-          <View style={styles.line}></View>
+      <Text style={styles.texts}> Deposit</Text>
+      <View style={styles.line}></View>
       <View style={styles.touchContainer}>
         {/* Show filteredData only if ID is not selected */}
         {id.length > 0 && !idSelected && filteredData.map(item => (
-          <TouchableOpacity key={item._id} onPress={() => handleIdPress(item)}> 
+          <TouchableOpacity key={item._id} onPress={() => handleIdPress(item)}>
             <View style={styles.card}>
               <Text>{item.FirstName} {item.LastName}</Text>
               <Text>ID: {item.Id}</Text>
@@ -98,7 +117,7 @@ const Deposit = () => {
       <View style={styles.formContainer}>
         <View style={styles.inputContainer}>
           <TextInput
-            style={styles.input }
+            style={styles.input}
             placeholder="Id"
             value={id}
             onChangeText={handleInputChange}
@@ -107,13 +126,13 @@ const Deposit = () => {
         </View>
         <View style={styles.inputContainer}>
           <TextInput
-            style={[styles.input, { width: '45%' }]} // Set width to 45% of container
+            style={[styles.input, { width: '45%' }]}
             placeholder="FirstName"
             value={firstName}
             onChangeText={setFirstName}
           />
           <TextInput
-            style={[styles.input, { width: '45%' }]} // Set width to 45% of container
+            style={[styles.input, { width: '45%' }]}
             placeholder="LastName"
             value={lastName}
             onChangeText={setLastName}
@@ -121,14 +140,14 @@ const Deposit = () => {
         </View>
         <View style={styles.inputContainer}>
           <TextInput
-            style={[styles.input, { width: '45%' }]} // Set width to 45% of container
+            style={[styles.input, { width: '45%' }]}
             placeholder="PhoneNumber"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             keyboardType="numeric"
           />
           <TextInput
-            style={[styles.input, { width: '45%' }]} // Set width to 45% of container
+            style={[styles.input, { width: '45%' }]}
             placeholder="Amount"
             value={amount}
             onChangeText={setAmount}
@@ -136,7 +155,7 @@ const Deposit = () => {
           />
         </View>
         <View style={styles.buttonContainers}>
-        <Button title="Submit" onPress={handleSubmit} />
+          <Button title="Submit" onPress={handleSubmit} />
         </View>
       </View>
       <Modal
@@ -176,18 +195,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   line: {
-    width: '95%', 
+    width: '95%',
     borderBottomColor: 'grey',
     borderBottomWidth: 1,
-    
-    marginTop:20,
+
+    marginTop: 20,
   },
-buttonContainers:{
-  marginTop:20,
-},
-  texts:{
-    fontWeight:'bold',
-    fontSize:19,
+  buttonContainers: {
+    marginTop: 20,
+  },
+  texts: {
+    fontWeight: 'bold',
+    fontSize: 19,
   },
   card: {
     alignItems: 'center',
@@ -212,25 +231,24 @@ buttonContainers:{
     borderColor: '#ccc',
     borderWidth: 1,
     paddingHorizontal: 10,
-    zIndex: 0, // Lower zIndex for TextInput
+    zIndex: 0,
   },
   touchContainer: {
     position: 'absolute',
-    top: 140, // Adjust as needed to create space between TextInput and touchContainer
-    
+    top: 140,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1, // Higher zIndex for touchContainer
+    zIndex: 1,
   },
   inputContainer: {
-    width: 280, // Adjust as needed
+    width: 280,
     flexDirection: 'row',
     marginBottom: 30,
     gap: 10,
   },
   formContainer: {
     padding: 20,
-    marginTop: 40, // Add margin to create space between TextInput and touchContainer
+    marginTop: 40,
   },
   centeredView: {
     flex: 1,
@@ -254,11 +272,11 @@ buttonContainers:{
     elevation: 5,
     width: '80%',
   },
-  success:{
-    fontSize:15,
-    marginTop:10,
-    marginBottom:10,
-    color:'green',
+  success: {
+    fontSize: 15,
+    marginTop: 10,
+    marginBottom: 10,
+    color: 'green',
   },
   button: {
     position: 'absolute',
@@ -277,10 +295,10 @@ buttonContainers:{
     fontSize: 19,
     textAlign: 'center',
   },
-  buttonContainer:{
+  buttonContainer: {
     width: '100%',
-    backgroundColor:'red',
-    height:50,
+    backgroundColor: 'red',
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
