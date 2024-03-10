@@ -12,17 +12,21 @@ import RegisterAdmin from './component/RegisterAdmin';
 import HomeScreen from './component/HomeScreen';
 import WithdrawalScreen from './component/Withdrawal';
 import DepositScreen from './component/Deposit';
-import Customer from './component/Customer';
+import Customers from './component/Customer';
+import UpdateCustomer from './component/UpdateCustomer';
+
 import AddCustomer from './component/AddCustomer';
 import AllTrnxHist from './component/AllTrnxHist';
 import CustomerBalance from './component/CustomerBalance'
 import Logo from './assets/spring_logo.png';
+import { AuthProvider } from './component/AuthContext';
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
 
   return (
+    <AuthProvider>
     <View style={styles.appContainer}>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Login">
@@ -44,6 +48,7 @@ const App = () => {
                     </View>
                   </TouchableOpacity>
                 </View>
+                 
               ),
             })}
             
@@ -61,17 +66,19 @@ const App = () => {
             })}
           />
           <Stack.Screen name="RegisterAdmin" component={RegisterAdmin} />
+          <Stack.Screen name="UpdateCustomer" component={UpdateCustomer} />
+
           <Stack.Screen name="CustomerBalance" component={CustomerBalance} />
           <Stack.Screen name="Search" component={Search} />
           <Stack.Screen name="Withdrawal" component={WithdrawalScreen} />
-          <Stack.Screen name="Customers" component={Customer} />
+          <Stack.Screen name="Customers" component={Customers} />
           <Stack.Screen name="AddCustomer" component={AddCustomer} />
           <Stack.Screen name="AllTrnx" component={AllTrnxHist} />
-          <Stack.Screen name="ViewMenu" component={ViewMenu} />
           <Stack.Screen name="Deposit" component={DepositScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </View>
+    </AuthProvider>
   );
 };
 

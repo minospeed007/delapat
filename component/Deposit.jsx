@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TextInput, View, Text, TouchableOpacity, Button, Modal, Pressable } from 'react-native';
+import { StyleSheet, TextInput, View,ActivityIndicator,
+   Text, TouchableOpacity, Button, Modal, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import axios from 'axios';
+import { useAuth } from './AuthContext'; 
 
 const Deposit = () => {
   const [id, setId] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isErr,setIsErr]=useState(false)
+
   const [firstName, setFirstName] = useState('');
+  const [isLoading,setIsLoading] =useState(false)
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [balance, setBalance] = useState('')
@@ -13,21 +19,12 @@ const Deposit = () => {
   const [amount, setAmount] = useState('');
   const [filteredData, setFilteredData] = useState([]);
   const [originalData, setOriginalData] = useState([]);
-  const [idSelected, setIdSelected] = useState(false); // State to track if ID is selected
-
+  const [idSelected, setIdSelected] = useState(false); 
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Function to retrieve the authentication token from AsyncStorage
-  const getToken = async () => {
-    try {
-      return await AsyncStorage.getItem('authToken');
-    } catch (error) {
-      console.error('Error retrieving authentication token:', error);
-      throw error;
-    }
-  };
+  
 
   const fetchData = async () => {
     try {
@@ -65,27 +62,30 @@ const Deposit = () => {
   };
 
   const handleSubmit = async () => {
+    setIsLoading(true)
     try {
       // Get the authentication token
-      const token = await getToken();
+      const token = await AsyncStorage.getItem('access_token');
 
-      // Configure Axios request headers with the token
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
+    // Configure Axios request headers with the token
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
 
       const formData = {
         "userId": id,
         "amount": amount,
         "FirstName": firstName,
         "LastName": lastName,
-        "phone": phoneNumber
+        "phone": phoneNumber,
+        
       };
       const response = await axios.post('https://delaserver.onrender.com/api/auth/deposit', formData, config);
       console.log(response?.data)
       setBalance(response?.data)
+      setIsErr(false)
       setModalVisible(true)
       setId('');
       setAmount('')
@@ -94,13 +94,26 @@ const Deposit = () => {
       setPhoneNumber('');
 
     } catch (error) {
-      console.error('Submitting Failed :', error);
+      setId('');
+      setAmount('')
+      setFirstName('');
+      setLastName('');
+      setPhoneNumber('');
+      setIsErr(true)
+      let errorMessage = 'An error occurred while creating the customer';
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      }
+      setErrorMessage(errorMessage); 
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.texts}> Deposit</Text>
+  {isErr ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
       <View style={styles.line}></View>
       <View style={styles.touchContainer}>
         {/* Show filteredData only if ID is not selected */}
@@ -154,9 +167,14 @@ const Deposit = () => {
             keyboardType="numeric"
           />
         </View>
-        <View style={styles.buttonContainers}>
-          <Button title="Submit" onPress={handleSubmit} />
-        </View>
+        <View style={styles.button}>
+        {isLoading ? (<ActivityIndicator/>):(
+           <TouchableOpacity   onPress={handleSubmit}>
+           <Text style={styles.buttonText}>Submit</Text>
+         </TouchableOpacity>
+
+          )}      
+            </View>
       </View>
       <Modal
         animationType="slide"
@@ -169,7 +187,7 @@ const Deposit = () => {
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <Pressable
-              style={[styles.button, styles.buttonClose]}
+              style={ styles.buttonClose}
               onPress={() => setModalVisible(!modalVisible)}
             >
               <Text style={styles.textStyle}>X</Text>
@@ -201,13 +219,28 @@ const styles = StyleSheet.create({
 
     marginTop: 20,
   },
-  buttonContainers: {
-    marginTop: 20,
+  buttonText: {
+    color: 'white',
+    textAlign:'center',
+    fontWeight: 'bold',
+    fontSize:19,
+  },
+  button: {
+    alignItems:'center',
+    justifyContent:'center',
+    backgroundColor: '#1E90FF',
+    padding: 10,
+    marginTop:20,
+
+    borderRadius: 5,
   },
   texts: {
     fontWeight: 'bold',
     fontSize: 19,
   },
+  errorMessage:{
+    marginTop:20,
+    color:"red",},
   card: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -278,15 +311,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: 'green',
   },
-  button: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    borderRadius: 10,
-    padding: 10,
-    elevation: 2,
-  },
+  
   buttonClose: {
+    position:'absolute',
+    top:10,
+    right:25,
     backgroundColor: 'white',
   },
   textStyle: {
@@ -295,14 +324,8 @@ const styles = StyleSheet.create({
     fontSize: 19,
     textAlign: 'center',
   },
-  buttonContainer: {
-    width: '100%',
-    backgroundColor: 'red',
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-  },
+  
+  
   text: {
     marginTop: 10,
     marginBottom: 10,

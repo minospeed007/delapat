@@ -1,32 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, FlatList, StyleSheet, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TextInput,ActivityIndicator } from 'react-native';
 import moment from 'moment';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AllTrnxHist = () => {
   const [transactions, setTransactions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const textInputRef = useRef(null); // Create a ref for the TextInput component
-
-  const fetchData = async () => {
-    try {
-      const response = await axios.get('https://delaserver.onrender.com/api/transactions/');
-      const sortedData = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
-      setTransactions(sortedData);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
+  const [isLoading, setIsLoading]=useState(true)
+  const textInputRef = useRef(null);
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  const fetchData = async () => {
+    try {
+      // Retrieve token from AsyncStorage
+      const storedToken = await AsyncStorage.getItem('access_token');
+      console.log('Stored token:', storedToken);
+
+      if (!storedToken) {
+        // Handle case when token is not found in AsyncStorage
+        console.error('Token not found in AsyncStorage');
+        return;
+      }
+
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${storedToken}`
+        }
+      };
+
+      // Fetch transactions from the server
+      const response = await axios.get('https://delaserver.onrender.com/api/transactions/', config);
+      const sortedData = response?.data?.transactions?.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+     //const transactionsData = response.data.transactions;
+      //console.log(response)
+      setTransactions(sortedData);
+      setIsLoading(false)
+
+    } catch (error) {
+      setIsLoading(false)
+      
+    }
+  };
+
   const filteredTransactions = transactions.filter((item) =>
     (item.FirstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.LastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-
       item.type.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
@@ -35,35 +59,40 @@ const AllTrnxHist = () => {
   };
 
   const handleFocusTextInput = () => {
-    textInputRef.current.focus(); // Focus on the TextInput component
+    textInputRef.current.focus();
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Transaction History</Text>
       <TextInput
-        ref={textInputRef} // Assign the ref to the TextInput component
+        ref={textInputRef}
         style={styles.input}
         onChangeText={(text) => setSearchQuery(text)}
         value={searchQuery}
         placeholder="Search..."
-        onFocus={handleFocusTextInput} // Call handleFocusTextInput when TextInput is focused
+        onFocus={handleFocusTextInput}
       />
-      <FlatList
-        data={filteredTransactions}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.transactionItem}>
-            <Text style={styles.transactionInfo}>First Name: {item.FirstName}</Text>
-            <Text style={styles.transactionInfo}>Last Name: {item.LastName}</Text>
-            <Text style={styles.transactionInfo}>Phone Number: {item.phone}</Text>
-            <Text style={styles.transactionInfo}>Amount: {item.amount}</Text>
-            <Text style={styles.transactionInfo}>Transaction Type: {item.type}</Text>
-            <Text style={styles.transactionInfo}>
-              Date and Time: {formatDate(item.date)}</Text>
-          </View>
-        )}
-      />
+      {transactions.length > 0 && filteredTransactions.length === 0 && (
+        <Text style={styles.text}>No transaction found</Text>
+      )}
+     {isLoading ?(
+      <ActivityIndicator/>
+     ):(<FlatList
+      data={filteredTransactions}
+      keyExtractor={(item, index) => index.toString()}
+      renderItem={({ item }) => (
+        <View style={styles.transactionItem}>
+          <Text style={styles.transactionInfo}>First Name: {item.FirstName}</Text>
+          <Text style={styles.transactionInfo}>Last Name: {item.LastName}</Text>
+          <Text style={styles.transactionInfo}>Phone Number: {item.phone}</Text>
+          <Text style={styles.transactionInfo}>Amount: {item.amount}</Text>
+          <Text style={styles.transactionInfo}>Transaction Type: {item.type}</Text>
+          <Text style={styles.transactionInfo}>
+            Date and Time: {formatDate(item.date)}</Text>
+        </View>
+      )}
+    />)} 
     </View>
   );
 };

@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, Button, StyleSheet, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, TextInput, Text, ActivityIndicator,
+   Button, StyleSheet, Modal, KeyboardAvoidingView, TouchableOpacity,
+   Platform } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 const AddCustomer = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [id, setId] = useState('');
   const [phone, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   const [errorMessage, setErrorMessage] = useState('');
   const [successModalVisible, setSuccessModalVisible] = useState(false);
 
@@ -25,30 +30,45 @@ const AddCustomer = () => {
 
   const handleSubmit = async () => {
     try {
+      setIsLoading(true);
+      // Get the authentication token
+      const token = await AsyncStorage.getItem('access_token');
+  
+      // Configure Axios request headers with the token
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+  
       const formData = {
         Id: id,
         FirstName: firstName,
         LastName: lastName,
         phone: phone,
       };
-      const response = await axios.post('https://delaserver.onrender.com/api/users/register_customer', formData);
+  
+      const response = await axios.post('https://delaserver.onrender.com/api/users/register_customer', formData, config);
+      setSuccessModalVisible(true);
       console.log(response?.data);
+  
       setId('');
       setFirstName('');
       setLastName('');
       setPhoneNumber('');
-      setErrorMessage('');
-      setSuccessModalVisible(true); // Open success modal
+      setErrorMessage(''); 
+      setIsLoading(false);
     } catch (error) {
-     // console.error('Sign up failed:', error);
-      if (error.response) {
-        const errorMessage = error.response.data.message;
-        setErrorMessage(errorMessage);
-      } else {
-        setErrorMessage('An error occurred. Please try again later.');
+      let errorMessage = 'An error occurred while creating the customer';
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
       }
+      setErrorMessage(errorMessage); 
+      setIsLoading(false);
+      
     }
   };
+  
 
   return (
     <KeyboardAvoidingView
@@ -84,7 +104,16 @@ const AddCustomer = () => {
         onChangeText={handleId}
       />
       <View style={styles.button}>
-        <Button title="Submit" onPress={handleSubmit} />
+      
+     
+      {isLoading ? (< ActivityIndicator/>):(
+      <TouchableOpacity   onPress={handleSubmit}>
+      <Text style={styles.buttonText}>Submit</Text>
+    </TouchableOpacity>
+    
+      )
+       }
+      
       </View>
       {/* Success Modal */}
       <Modal
@@ -113,6 +142,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
+  
+  button: {
+    alignItems:'center',
+    justifyContent:'center',
+    backgroundColor: '#1E90FF',
+    padding: 10,
+    marginTop:20,
+
+    borderRadius: 5,
+    alignItems: 'center',
+    width: '100%',
+  },
+  buttonText: {
+    color: 'white',
+    textAlign:'center',
+    fontWeight: 'bold',
+    fontSize:19,
+  },
   input: {
     width: '100%',
     height: 40,
@@ -123,12 +170,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   text: {
-    marginBottom: 30,
+    marginBottom: 40,
     textAlign: 'center',
     fontSize: 19,
     fontWeight: 'bold',
   },
-  button: {
+  submitText: {
     width: 250,
     marginTop: 30,
     marginBottom: 30,

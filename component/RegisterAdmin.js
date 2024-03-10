@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, Button, TextInput, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Button, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 
 const RegisterAdmin = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [id, setId] = useState('');
+  const [email, setEmail] = useState('');
+  const [isErr, setIsErr]= useState('');
+  const [errorMessage,setErrorMessage]=useState('')
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false); // State for loading indicator
   const navigation = useNavigation();
 
-  const handleId = (text) => {
-    setId(text);
+  const handleEmail = (text) => {
+    setEmail(text);
   };
   const handleFirstName = (text) => {
     setFirstName(text);
@@ -29,9 +32,10 @@ const RegisterAdmin = () => {
   };
 
   const handleSubmit = async () => {
+    setLoading(true); // Set loading state to true when submitting
     try {
       const formData = {
-        "Id": id,
+        "Email": email,
         "FirstName": firstName,
         "LastName": lastName,
         "username": username,
@@ -39,9 +43,21 @@ const RegisterAdmin = () => {
       };
       const response = await axios.post('https://delaserver.onrender.com/api/auth/admin', formData);
       console.log(response?.data)
+      setEmail('');
+      setPassword('');
+      setUsername('');
+      setFirstName('');
+      setLastName('');
       navigation.navigate('Login');
     } catch (error) {
-      console.error('Sign up failed:', error);
+      setIsErr(true)
+      let errorMessage = 'An error occurred while creating the customer';
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      }
+      setErrorMessage(errorMessage); 
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,106 +66,138 @@ const RegisterAdmin = () => {
   };
 
   return (
-    <View>
+    <KeyboardAvoidingView style={{flex: 1}} behavior="padding">
       <View style={styles.formContainer}>
-  <View style={styles.inputContainer}>
-    <TextInput
-      style={styles.input}
-      placeholder="Id"
-      value={id}
-      keyboardType="phone-pad"
-      onChangeText={handleId}
-    />    
-  </View>
-  
-  <View style={styles.inputContainer}>
-    <TextInput
-      style={styles.input}
-      placeholder="First name"
-      value={firstName}
-      onChan
-      
-      
-      geText={handleFirstName}
-    />
-    <TextInput
-      style={styles.input}
-      placeholder="Last name"
-      value={lastName}
-      onChangeText={handleLastName}
-    />
-  </View>
-  <View style={styles.inputContainer}>
-    <TextInput
-      style={styles.input}
-      placeholder="Username"
-      value={username}
-      onChangeText={handleUsername}
-    />    
-  
-    <TextInput
-      style={styles.input}
-      placeholder="Password"
-      value={password}
-      onChangeText={handlePassword}
-      secureTextEntry={true}
-    />    
-  </View>
-  <View style={styles.textContainer}>
-  <TouchableOpacity onPress={handleLoginPress}>
-  <Text style={styles.text}>Have an account? Login</Text>
-                </TouchableOpacity>
-                </View>
-  <Button title="Submit" onPress={handleSubmit} />
-</View>
+      <Text style={styles.signupText}>Sign up</Text>
+      {isErr ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
 
-    </View>
+        <View style={styles.inputContainer}>
+         
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            
+            onChangeText={handleEmail}
+          />    
+        </View>
+        
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="First name"
+            value={firstName}
+            onChangeText={handleFirstName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Last name"
+            value={lastName}
+            onChangeText={handleLastName}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            value={username}
+            onChangeText={handleUsername}
+          />    
+        
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={handlePassword}
+            secureTextEntry={true}
+          />    
+        </View>
+        <View style={styles.textContainer}>
+          <TouchableOpacity onPress={handleLoginPress}>
+            <Text style={styles.text}>Have an account? Login</Text>
+          </TouchableOpacity>
+        </View>
+        {/* Conditionally render the loading indicator */}
+        <View style={styles.button}>
+        {loading ? (<ActivityIndicator/>):(
+           <TouchableOpacity   onPress={handleSubmit}>
+           <Text style={styles.buttonText}>Submit</Text>
+         </TouchableOpacity>
+
+          )}      
+            </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-    card: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#fff',
-      borderRadius: 8,
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
-      elevation: 5,
-      padding: 16,
-      margin: 8,
+  card: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
     },
-    input: {
-      flex: 1,
-      height: 40,
-      borderRadius: 8,
-      borderColor: '#ccc',
-      borderWidth: 1,
-      paddingHorizontal: 10,
-    },
-    textContainer:{
-      marginBottom: 40,
-    },
-    inputContainer: {
-      flexDirection: 'row',
-      marginBottom: 30,
-      gap:13,
-    },
-    text: {
-        textAlign:"center",
-        color: 'gray',
-        fontSize: 13,
-      },
-    formContainer: {
-      padding: 20,
-      marginTop: 20,
-    },
-  });
-  
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    padding: 16,
+    margin: 8,
+  },
+  input: {
+    flex: 1,
+    height: 40,
+    borderRadius: 8,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+  },
+  textContainer:{
+    marginBottom: 30,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    gap:13,
+  },
+  buttonText: {
+    color: 'white',
+    textAlign:'center',
+    fontWeight: 'bold',
+    fontSize:19,
+  },
+  button: {
+    alignItems:'center',
+    justifyContent:'center',
+    backgroundColor: '#1E90FF',
+    padding: 10,
+    marginTop:20,
+
+    borderRadius: 5,
+  },
+  signupText:{
+    fontWeight:'bold',
+    fontSize:19,
+    marginBottom:25,
+  },
+  text: {
+    textAlign:"center",
+    color: 'gray',
+    fontSize: 13,
+  },
+  formContainer: {
+    padding: 20,
+    marginTop: 20,
+  },
+  errorMessage:{
+    color:'red',
+    textAlign:'center',
+    marginBottom:10,
+},
+});
 
 export default RegisterAdmin;

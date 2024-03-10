@@ -1,14 +1,18 @@
+// Login.js
 import React, { useState, useRef } from 'react';
-import { StyleSheet, View, Text, Button, TextInput } from 'react-native';
+import { StyleSheet,TouchableOpacity , View, Text, Button, TextInput, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import axios from 'axios';
+import { useAuth } from './AuthContext'; // Import the useAuth hook
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const passwordInputRef = useRef(null);
-
+  const { login } = useAuth(); // Use the useAuth hook to access context functions
   const navigation = useNavigation();
 
   const handleUsername = (text) => {
@@ -20,22 +24,34 @@ const Login = () => {
   };
 
   const handleSubmit = async () => {
+    setIsLoading(true); 
     try {
       const formData = {
-        "username":username,
-        "password":password,
-        
+        "username": username,
+        "password": password,
       };
       const response = await axios.post('https://delaserver.onrender.com/api/auth/admin_login', formData);
-      console.log(response?.data)
-      console.log("user:"+ response?.data?.details?.username)
+      
+      // Store cookies in AsyncStorage
+      const cookies = response.headers['set-cookie'];
+      
+      if (cookies) {
+        await AsyncStorage.setItem('access_token', JSON.stringify(cookies));
+      }
+      
+      // Set the logged in username in the context
+      login(response?.data?.details?.username);
+
+      setUsername('');
+      setPassword('');
+      setIsLoading(false); // Set isLoading to false after successful login
       navigation.navigate('Home');
     } catch (error) {
+      setIsLoading(false);
       if (error.response) {
-        // The request was made and the server responded with a status code
         const errorMessage = error.response.data.message;
         console.log(errorMessage);
-        setErrorMessage(errorMessage); // Store error message in state
+        setErrorMessage(errorMessage); 
       } else if (error.request) {
         // The request was made but no response was received
         console.log(error.request);
@@ -50,7 +66,6 @@ const Login = () => {
 
   return (
     <View style={styles.container}>
-
       <Text style={styles.login}>Login</Text>
       {errorMessage ? <Text style={{ color: 'red' }}>{errorMessage}</Text> : null}
 
@@ -72,9 +87,16 @@ const Login = () => {
         />
         <Text style={styles.text}>Forgot Password?</Text>
         <View style={styles.button}>
-          <Button title="Submit" onPress={handleSubmit} color="#4CAF50" />
-        </View>
+     
+      {isLoading ? (< ActivityIndicator/>):(
+      <TouchableOpacity   onPress={handleSubmit}>
+      <Text style={styles.buttonText}>Submit</Text>
+    </TouchableOpacity>
+    
+      )
+       }
       </View>
+    </View>
     </View>
   );
 };
@@ -85,7 +107,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor:'F1F5F2',
+    backgroundColor: 'F1F5F2',
   },
   input: {
     width: 250,
@@ -102,8 +124,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   login: {
-    color:'#333333',
-    marginBottom:20,
+    color: '#333333',
+    marginBottom: 20,
     fontSize: 19,
   },
   card: {
@@ -122,10 +144,21 @@ const styles = StyleSheet.create({
     padding: 16,
     margin: 8,
   },
+  buttonText: {
+    color: 'white',
+    textAlign:'center',
+    fontWeight: 'bold',
+    fontSize:19,
+  },
   button: {
-    width: 250,
-    marginTop: 30,
-    marginBottom: 30,
+    alignItems:'center',
+    justifyContent:'center',
+    backgroundColor: '#1E90FF',
+    padding: 10,
+    marginTop:20,
+
+    borderRadius: 5,
+    width: 200,
   },
 });
 

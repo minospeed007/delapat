@@ -5,6 +5,32 @@ const ViewMenu =()=>{
     return(
         <View style={styles.container}>
             <Text style={styles.label}>View Menu</Text>
+            <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Pressable
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => setModalVisible(!modalVisible)}
+            >
+              <Text style={styles.textStyle}>X</Text>
+            </Pressable>
+            <Text style={styles.success}>Deposit Successful</Text>
+
+            <Text style={styles.text}>First Name: {balance?.deposit?.FirstName}</Text>
+            <Text style={styles.text}>Last Name: {balance?.deposit?.LastName}</Text>
+            <Text style={styles.text}>Deposited: {balance?.deposit?.amount}</Text>
+            <Text style={styles.text}>Total Balance: {balance?.balance}</Text>
+            <Text style={styles.text}>Phone: {balance?.deposit?.phone}</Text>
+          </View>
+        </View>
+      </Modal>
         </View>
     )
 }

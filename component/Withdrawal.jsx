@@ -1,36 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TextInput, View, Text, Modal, Pressable, TouchableOpacity, Button } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+import { StyleSheet, TextInput, View, Text,
+  ActivityIndicator, Modal, Pressable, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from './AuthContext'; 
+
 import axios from 'axios';
 
 const Withdrawal = () => {
   const [id, setId] = useState('');
+  const [isLoading,setIsLoading]=useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [amount, setAmount] = useState('');
-  const [balance, setBalance] = useState('')
-  const [errMsg, setErrMsg] = useState('')
-  const [modalVisible, setModalVisible] = useState(false)
+  const [balance, setBalance] = useState('');
+  const [errMsg, setErrMsg] = useState('');
+  const [isErr,setIsErr]=useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [errorModalVisible, setErrorModalVisible] = useState(false)
   const [filteredData, setFilteredData] = useState([]);
   const [originalData, setOriginalData] = useState([]);
-  const [idSelected, setIdSelected] = useState(false); // State to track if ID is selected
+  const [idSelected, setIdSelected] = useState(false); 
+  const { loggedInUsername } = useAuth();
+
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Function to retrieve the authentication token from AsyncStorage
-  const getAuthToken = async () => {
-    try {
-      return await AsyncStorage.getItem('authToken');
-    } catch (error) {
-      console.error('Error retrieving authentication token:', error);
-      throw error;
-    }
-  };
+  
 
   const fetchData = async () => {
     try {
@@ -68,25 +67,32 @@ const Withdrawal = () => {
   };
 
   const handleSubmit = async () => {
+    setIsLoading(true)
     try {
-      // Get the authentication token
-      const authToken = await getAuthToken();
+      const token = await AsyncStorage.getItem('access_token');
+
+    // Configure Axios request headers with the token
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
 
       const formData = {
         "userId": id,
         "amount": amount,
         "FirstName": firstName,
         "LastName": lastName,
-        "phone": phoneNumber
+        "phone": phoneNumber,
+        "username":loggedInUsername
       };
-      const response = await axios.post('https://delaserver.onrender.com/api/auth/withdrawal', formData, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
+      const response = await axios.post('https://delaserver.onrender.com/api/auth/withdrawal', formData, config);
       console.log(response?.data)
       setBalance(response?.data)
+      setIsErr(false)
       setModalVisible(true)
+      setIsLoading(false);
       setId('');
       setAmount('')
       setFirstName('');
@@ -96,10 +102,18 @@ const Withdrawal = () => {
     } catch (error) {
       if (error.response && error.response.data && error.response.data.error) {
         setErrMsg(error.response.data.error);
+        setIsErr(true);
+        setId('');
+      setAmount('')
+      setFirstName('');
+      setLastName('');
+      setPhoneNumber('');
       } else {
         setErrMsg('An error occurred while processing your request.');
       }
       setErrorModalVisible(true);
+    }finally{
+      setIsLoading(false);
     }
   };
 
@@ -132,13 +146,13 @@ const Withdrawal = () => {
         </View>
         <View style={styles.inputContainer}>
           <TextInput
-            style={[styles.input, { width: '45%' }]} // Set width to 45% of container
+            style={[styles.input, { width: '45%' }]} 
             placeholder="FirstName"
             value={firstName}
             onChangeText={setFirstName}
           />
           <TextInput
-            style={[styles.input, { width: '45%' }]} // Set width to 45% of container
+            style={[styles.input, { width: '45%' }]} 
             placeholder="LastName"
             value={lastName}
             onChangeText={setLastName}
@@ -146,23 +160,28 @@ const Withdrawal = () => {
         </View>
         <View style={styles.inputContainer}>
           <TextInput
-            style={[styles.input, { width: '45%' }]} // Set width to 45% of container
+            style={[styles.input, { width: '45%' }]} 
             placeholder="PhoneNumber"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             keyboardType="numeric"
           />
           <TextInput
-            style={[styles.input, { width: '45%' }]} // Set width to 45% of container
+            style={[styles.input, { width: '45%' }]}
             placeholder="Amount"
             value={amount}
             onChangeText={setAmount}
             keyboardType="numeric"
           />
         </View>
-        <View style={styles.buttonContainers}>
-          <Button title="Submit" onPress={handleSubmit} />
-        </View>
+        <View style={styles.button}>
+        {isLoading ? (<ActivityIndicator/>):(
+           <TouchableOpacity   onPress={handleSubmit}>
+           <Text style={styles.buttonText}>Submit</Text>
+         </TouchableOpacity>
+
+          )}      
+            </View>
       </View>
       <Modal
         animationType="slide"
@@ -192,26 +211,27 @@ const Withdrawal = () => {
       </Modal>
       {/* Error Modal */}
       <Modal
-        animationType="slide"
-        transparent={true}
-        visible={errorModalVisible}
-        onRequestClose={() => {
-          setErrorModalVisible(!errorModalVisible);
-        }}
+  animationType="slide"
+  transparent={true}
+  visible={errorModalVisible}
+  onRequestClose={() => {
+    setErrorModalVisible(!errorModalVisible);
+  }}
+>
+  <View style={styles.centeredView}>
+    <View style={styles.modalView}>
+      <Pressable
+        style={ styles.buttonClose}
+        onPress={() => setErrorModalVisible(!errorModalVisible)}
       >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setErrorModalVisible(!errorModalVisible)}
-            >
-              <Text style={styles.textStyle}>X</Text>
-            </Pressable>
-            <Text style={styles.error}>Transaction Unsuccessful</Text>
-            <Text style={styles.textErr}>{errMsg}</Text>
-          </View>
-        </View>
-      </Modal>
+        <Text style={styles.textStyle}>X</Text>
+      </Pressable>
+      <Text style={styles.error}>Transaction Unsuccessful</Text>
+      {errMsg ? <Text style={styles.textErr}>{errMsg}</Text> : null}
+    </View>
+  </View>
+</Modal>
+
     </View>
   );
 };
@@ -222,6 +242,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  errorMessage:{
+color:'red',
+marginTop:20,
+  },
+  
   line: {
     width: '95%',
     borderBottomColor: 'gray',
@@ -258,25 +283,25 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderWidth: 1,
     paddingHorizontal: 10,
-    zIndex: 0, // Lower zIndex for TextInput
+    zIndex: 0, 
   },
   touchContainer: {
     position: 'absolute',
-    top: 140, // Adjust as needed to create space between TextInput and touchContainer
+    top: 140, 
 
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1, // Higher zIndex for touchContainer
+    zIndex: 1, 
   },
   inputContainer: {
-    width: 280, // Adjust as needed
+    width: 280, 
     flexDirection: 'row',
     marginBottom: 30,
     gap: 10,
   },
   formContainer: {
     padding: 20,
-    marginTop: 40, // Add margin to create space between TextInput and touchContainer
+    marginTop: 40, 
   },
   centeredView: {
     flex: 1,
@@ -289,7 +314,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
-    alignItems: 'center',
+    alignItems: 'center', 
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -300,6 +325,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     width: '80%',
   },
+  
   success: {
     fontSize: 15,
     marginTop: 10,
@@ -312,15 +338,25 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: 'red',
   },
+  buttonText: {
+    color: 'white',
+    textAlign:'center',
+    fontWeight: 'bold',
+    fontSize:19,
+  },
   button: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    borderRadius: 10,
+    alignItems:'center',
+    justifyContent:'center',
+    backgroundColor: '#1E90FF',
     padding: 10,
-    elevation: 2,
+    marginTop:20,
+
+    borderRadius: 5,
   },
   buttonClose: {
+    position:'absolute',
+    top:10,
+    right:25,
     backgroundColor: 'white',
   },
   textStyle: {
@@ -329,14 +365,7 @@ const styles = StyleSheet.create({
     fontSize: 19,
     textAlign: 'center',
   },
-  buttonContainer: {
-    width: '100%',
-    backgroundColor: 'red',
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-  },
+  
   textErr: {
     fontSize:17,
     color:"red",

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, Dimensions } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const Menu = () => {
@@ -29,7 +31,14 @@ const Menu = () => {
   const toggleMenu = () => {
     setMenuOpen(!isMenuOpen);
   };
-
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('access_token'); 
+      navigation.navigate('Login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  }
   useFocusEffect(
     React.useCallback(() => {
       setMenuOpen(false);
@@ -45,8 +54,9 @@ const Menu = () => {
       <Modal
         visible={isMenuOpen}
         animationType="slide"
-        transparent={true}
         onRequestClose={toggleMenu}
+        transparent={true}
+
         presentationStyle="overFullScreen"
         hardwareAccelerated
         statusBarTranslucent
@@ -60,8 +70,12 @@ const Menu = () => {
             <Text style={styles.menuText} onPress={handleViewCustomer}>View Customers</Text>
             <Text style={styles.menuText} onPress={handleAddCustomer}>Add Customer</Text>
             <Text style={styles.menuText} onPress={handleCustBal}>Customer Balance</Text>
- 
-            <Text style={styles.menuText} onPress={handleAllTrnx }>Transaction History</Text>
+
+          <Text style={styles.menuText} onPress={handleAllTrnx }>Transaction History</Text>
+          <TouchableOpacity style={styles.logout} onPress={handleLogout}>
+              <FontAwesome name="sign-out" size={24} color="black" />
+              <Text style={styles.menuText}>Logout</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -85,7 +99,7 @@ const styles = StyleSheet.create({
     marginTop:43,
     width: Dimensions.get('window').width * 0.8, // Adjust the width as needed
     height: '90%',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: '#F9F9F9',
   },
   textContainer: {
     marginTop: 80,
@@ -93,10 +107,16 @@ const styles = StyleSheet.create({
     alignItems:'center',
     marginLeft: 5,
   },
+  logout: {
+    flexDirection: 'row',
+    gap:10,
+    alignItems: 'center',
+    color: 'blue',
+  },
   menuText: {
     marginTop: 20,
     fontSize: 20,
-    color: 'white',
+    color: 'black',
     marginBottom: 20,
   },
   closeButton: {
